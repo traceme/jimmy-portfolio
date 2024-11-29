@@ -22,11 +22,11 @@ import { useNavigate } from 'react-router-dom';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const backgroundOptions = [
-  { label: 'Darkest', color: '#1a1a1a', textBrightness: 65 },
-  { label: 'Dark', color: '#2a2a2a', textBrightness: 80 },
-  { label: 'Medium', color: '#4a4a4a', textBrightness: 95 },
-  { label: 'Light', color: '#f0f0f0', textBrightness: 110 },
-  { label: 'Lightest', color: '#ffffff', textBrightness: 135 },
+  { label: 'Darkest', color: '#1a1a1a', textBrightness: 0.65 },
+  { label: 'Dark', color: '#2a2a2a', textBrightness: 0.8 },
+  { label: 'Medium', color: '#4a4a4a', textBrightness: 0.95 },
+  { label: 'Light', color: '#f0f0f0', textBrightness: 1.1 },
+  { label: 'Lightest', color: '#ffffff', textBrightness: 1.35 },
 ];
 
 const nightModeColors = {
@@ -307,35 +307,24 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
 
   return (
     <>
-      <GlobalStyles
-        styles={{
-          '.night-mode-page': {
-            backgroundColor: '#1a1a1a !important',
-            '& canvas': {
-              filter: 'invert(92%) brightness(65%) contrast(130%) sepia(10%) !important',
-              mixBlendMode: 'screen !important',
-              backgroundColor: '#1a1a1a !important',
-              opacity: '0.95 !important'
-            }
-          },
-          '.react-pdf__Page': {
-            transition: 'all 0.5s ease !important',
-            backgroundColor: 'transparent !important',
-          }
-        }}
-      />
-
+      <GlobalStyles styles={{
+        '.night-mode-page': {
+          filter: `brightness(${backgroundOptions.find(opt => opt.color === backgroundColor)?.textBrightness || 1}) invert(${isNightMode ? 1 : 0})`,
+          transition: 'filter 0.3s ease-in-out',
+        },
+        '.react-pdf__Page__canvas': {
+          borderRadius: '8px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        }
+      }} />
+      
       <Box sx={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        bgcolor: isNightMode ? nightModeColors.background : backgroundColor,
+        minHeight: '100vh',
+        bgcolor: isNightMode ? backgroundColor : '#ffffff',
+        transition: 'background-color 0.3s ease-in-out',
+        position: 'relative',
         display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        transition: 'all 0.5s ease',
+        flexDirection: 'column'
       }}>
         {/* Night mode overlay */}
         {isNightMode && (
@@ -495,9 +484,26 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
           overflow: 'auto',
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           position: 'relative',
-          zIndex: 2
+          zIndex: 2,
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          pb: '120px', // Added padding to container
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(0,0,0,0.2)',
+            borderRadius: '4px',
+            '&:hover': {
+              background: 'rgba(0,0,0,0.3)',
+            },
+          },
         }}>
           {loading || !isWorkerLoaded ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -537,9 +543,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
                 display: 'flex', 
                 gap: 2, 
                 justifyContent: 'center',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 minHeight: 'calc(100vh - 120px)',
-                padding: '20px 0'
+                padding: '20px 0',
+                marginTop: '-10vh',
+                paddingBottom: '120px', // Increased padding to prevent overlap
+                marginBottom: '80px', // Added margin to ensure space at the bottom
+                '& .react-pdf__Page': {
+                  backgroundColor: 'transparent',
+                  canvas: {
+                    maxWidth: '100%',
+                    height: 'auto',
+                  }
+                }
               }}>
                 <Page
                   key={`page_${pageNumber}`}
@@ -583,9 +599,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
         {/* Page Navigation */}
         <Box sx={{ 
           position: 'fixed', 
-          bottom: 20, 
-          left: '50%', 
-          transform: 'translateX(-50%)',
+          bottom: 40,
+          right: 40,
+          transform: 'scale(0.65)',
+          transformOrigin: 'bottom right',
           display: 'flex',
           alignItems: 'center',
           gap: 2,
@@ -593,7 +610,24 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
           padding: '8px 16px',
           borderRadius: '20px',
           backdropFilter: 'blur(10px)',
-          zIndex: 1000
+          zIndex: 1000,
+          '& .MuiButton-root': {
+            color: '#fff',
+            minWidth: 'auto',
+            padding: '4px 8px',
+          },
+          '& .MuiTypography-root': {
+            color: '#fff',
+            minWidth: '120px',
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
+            fontSize: '1.1rem',
+          },
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+          transition: 'transform 0.3s ease-in-out',
+          '&:hover': {
+            transform: 'scale(0.7)',
+          }
         }}>
           <Typography sx={{ color: '#fff' }}>
             {isSinglePage 
