@@ -37,10 +37,10 @@ const UploadBook: React.FC<UploadBookProps> = ({ onUploadSuccess }) => {
       return;
     }
 
-    // Validate file size (500MB max)
-    const maxSize = 500 * 1024 * 1024; // 500MB in bytes
+    // Validate file size (800MB max)
+    const maxSize = 800 * 1024 * 1024; // 800MB in bytes
     if (file.size > maxSize) {
-      setError('File size exceeds 500MB limit');
+      setError('File size exceeds 800MB limit');
       setUploading(false);
       return;
     }
