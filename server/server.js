@@ -294,19 +294,17 @@ app.delete('/api/books/:id', async (req, res) => {
   }
 });
 
-// Serve individual PDF files with proper headers and streaming
+// Serve PDF files
 app.get('/uploads/books/:filename', async (req, res) => {
   try {
     const filename = decodeURIComponent(req.params.filename);
-    const decodedFilename = Buffer.from(filename, 'utf8').toString();
-    const filePath = path.join(__dirname, '../public/uploads/books', decodedFilename);
+    const filePath = path.join(__dirname, '../public/uploads/books', filename);
     
-    console.log('Attempting to serve PDF:', {
-      requestedFilename: req.params.filename,
-      decodedFilename: decodedFilename,
+    console.log('Serving PDF file:', {
+      requestedFile: filename,
       fullPath: filePath
     });
-    
+
     if (!fss.existsSync(filePath)) {
       console.error('File not found:', filePath);
       return res.status(404).json({ error: 'PDF not found' });
@@ -317,42 +315,47 @@ app.get('/uploads/books/:filename', async (req, res) => {
     const range = req.headers.range;
 
     if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
+      const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
       const chunksize = (end - start) + 1;
-      const file = fss.createReadStream(filePath, { start, end });
-      
+
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(decodedFilename)}`,
       });
-      
-      file.pipe(res);
-    } else {
-      res.writeHead(200, {
-        'Content-Length': fileSize,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(decodedFilename)}`,
-        'Accept-Ranges': 'bytes'
-      });
-      
-      const fileStream = fss.createReadStream(filePath);
-      fileStream.on('error', (error) => {
-        console.error('Error streaming file:', error);
+
+      const stream = fss.createReadStream(filePath, { start, end });
+      stream.on('error', (error) => {
+        console.error('Stream error:', error);
         if (!res.headersSent) {
           res.status(500).json({ error: 'Failed to stream PDF' });
         }
       });
-      
-      fileStream.pipe(res);
+      stream.pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type': 'application/pdf',
+        'Accept-Ranges': 'bytes'
+      });
+
+      const stream = fss.createReadStream(filePath);
+      stream.on('error', (error) => {
+        console.error('Stream error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to stream PDF' });
+        }
+      });
+      stream.pipe(res);
     }
   } catch (error) {
     console.error('Error serving PDF:', error);
-    res.status(500).json({ error: 'Failed to serve PDF', details: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to serve PDF', details: error.message });
+    }
   }
 });
 

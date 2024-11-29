@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -126,6 +126,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
     localStorage.setItem(`pdfPrefs_${bookId}`, JSON.stringify(prefsToSave));
   }, [bookId, pageNumber, scale, rotation, isNightMode, backgroundColor, isSinglePage]);
 
+  useEffect(() => {
+    pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  }, []);
+
+  const loadingTask = useMemo(() => {
+    if (!currentPdfUrl) return null;
+    
+    return pdfjs.getDocument({
+      url: currentPdfUrl,
+      rangeChunkSize: 65536, // 64KB chunks
+      maxImageSize: 16777216, // 16MB
+      cMapUrl: 'https://unpkg.com/pdfjs-dist@2.12.313/cmaps/',
+      cMapPacked: true,
+    });
+  }, [currentPdfUrl]);
+
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setLoading(false);
@@ -170,31 +186,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
   }, [currentPdfUrl]);
 
   useEffect(() => {
-    const initializeWorker = async () => {
-      if (!currentPdfUrl) {
-        console.error('No PDF URL provided');
-        return;
-      }
-
-      try {
-        const loadingTask = pdfjs.getDocument(currentPdfUrl);
-        await loadingTask.promise;
-        setIsWorkerLoaded(true);
-      } catch (error) {
-        console.error('Error initializing PDF worker:', error);
-        setError('Failed to initialize PDF viewer');
-      }
-    };
-    
-    if (currentPdfUrl) {
-      setIsWorkerLoaded(false);
-      initializeWorker();
+    if (loadingTask) {
+      loadingTask.promise
+        .then((pdf) => {
+          setNumPages(pdf.numPages);
+          setIsWorkerLoaded(true);
+          setError(null);
+        })
+        .catch((error) => {
+          console.error('Error loading PDF:', error);
+          setError('Failed to load PDF. Please try again.');
+          setIsWorkerLoaded(true);
+        });
     }
-    
-    return () => {
-      setIsWorkerLoaded(false);
-    };
-  }, [currentPdfUrl]);
+  }, [loadingTask]);
 
   const goToPrevPage = () => {
     if (pageNumber > 1) {
