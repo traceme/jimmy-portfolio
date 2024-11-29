@@ -1,47 +1,54 @@
-# PDF Viewer with Night Mode
+# Jimmy's Portfolio Website
 
-A React-based PDF viewer with advanced night mode features and customizable reading experience.
+A modern, interactive personal website featuring a professional resume and an AI chatbot integration.
 
 ## Features
 
-- 📖 Two-page spread view
-- 🌙 Advanced night mode with customizable brightness
-- 🎨 Multiple background color options
-- ⌨️ Keyboard navigation (Left/Right arrows)
-- 📺 Fullscreen mode
-- 👀 Eye-friendly reading experience
+- 🎨 Modern and responsive design
+- 📝 Interactive resume presentation
+- 🤖 AI chatbot integration (powered by ChatGPT/Claude)
+- 💼 Portfolio showcase
+- 📱 Mobile-friendly interface
 
-## Technologies Used
+## Tech Stack
 
-- React with TypeScript
-- Material-UI for components
-- react-pdf for PDF rendering
-- PDF.js for PDF processing
+- React
+- TypeScript
+- Material-UI
+- Framer Motion for animations
+- Express.js backend (for AI integration)
 
 ## Getting Started
 
-1. Clone the repository
-2. Install dependencies:
+1. Install Node.js and npm if you haven't already
+2. Clone this repository
+3. Install dependencies:
    ```bash
    npm install
    ```
-3. Start the development server:
+4. Create a `.env` file and add your OpenAI/Claude API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
+5. Start the development server:
    ```bash
    npm start
    ```
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser
 
-## Usage
+## Project Structure
 
-- Use left/right arrow keys to navigate between pages
-- Click the moon icon to toggle night mode
-- Use the color buttons at the bottom to adjust text brightness
-- Press 'F' or click the fullscreen icon to toggle fullscreen mode
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+```
+jimmy-portfolio/
+├── src/
+│   ├── components/     # React components
+│   ├── pages/         # Page components
+│   ├── services/      # API services
+│   ├── styles/        # CSS and styling
+│   └── utils/         # Utility functions
+├── public/            # Static assets
+└── server/           # Backend server code
+```
 
 ## License
 
-MIT
+MIT License

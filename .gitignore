@@ -31,5 +31,6 @@ yarn-error.log*
 # Large files
 file/third_eye_articles.pdf
 public/pdf-pages/
+public/uploads/
 server/pdfs/
 server/node_modules/

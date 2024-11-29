@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Typography, Box, Button, Grid } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -75,6 +76,30 @@ const Home = () => {
                 sx={{ px: 4, py: 2 }}
               >
                 Chat with AI
+              </Button>
+            </motion.div>
+          </Grid>
+          <Grid item>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/library')}
+                startIcon={<MenuBookIcon />}
+                sx={{ 
+                  px: 4,
+                  py: 2,
+                  backgroundColor: 'secondary.main',
+                  '&:hover': {
+                    backgroundColor: 'secondary.dark',
+                  }
+                }}
+              >
+                My Library
               </Button>
             </motion.div>
           </Grid>
