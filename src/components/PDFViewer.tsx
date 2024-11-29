@@ -201,13 +201,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
     }
   }, [loadingTask]);
 
-  const goToPrevPage = () => {
+  const handlePrevPage = () => {
     if (pageNumber > 1) {
       setPageNumber(pageNumber - (isSinglePage ? 1 : 2));
     }
   };
 
-  const goToNextPage = () => {
+  const handleNextPage = () => {
     if (pageNumber < numPages) {
       setPageNumber(pageNumber + (isSinglePage ? 1 : 2));
     }
@@ -215,9 +215,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
 
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
     if (event.key === 'ArrowLeft') {
-      goToPrevPage();
+      handlePrevPage();
     } else if (event.key === 'ArrowRight') {
-      goToNextPage();
+      handleNextPage();
     } else if (event.key === 'f') {
       setIsFullscreen(!isFullscreen);
     }
@@ -326,39 +326,27 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Night mode overlay */}
-        {isNightMode && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: nightModeColors.overlay,
-              pointerEvents: 'none',
-              zIndex: 1
-            }}
-          />
+        {isFullscreen && (
+          <GlobalStyles styles={{
+            body: {
+              overflow: 'hidden',
+            },
+          }} />
         )}
 
-        {/* Top Controls */}
+        {/* Top Left Controls */}
         <Box sx={{ 
-          p: 1, 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          bgcolor: 'rgba(0,0,0,0.3)',
-          backdropFilter: 'blur(10px)',
-          color: isNightMode ? nightModeColors.text : 'text.primary'
+          position: 'fixed',
+          top: 20,
+          left: 20,
+          display: 'flex',
+          justifyContent: 'flex-start',
+          gap: 2,
+          zIndex: 1000,
+          transform: 'scale(0.6)',
+          transformOrigin: 'top left'
         }}>
           <ButtonGroup variant="contained" size="small" sx={{ gap: 1 }}>
-            <Button 
-              onClick={() => navigate('/library')}
-              sx={buttonStyles.control}
-            >
-              <ArrowBack />
-            </Button>
             <Button 
               onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))}
               sx={buttonStyles.control}
@@ -384,8 +372,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
               {isSinglePage ? <ViewColumn /> : <ViewStream />}
             </Button>
           </ButtonGroup>
+        </Box>
 
-          <ButtonGroup variant="contained" size="small" sx={{ gap: 1 }}>
+        {/* Top Right Controls */}
+        <Box sx={{ 
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          display: 'flex',
+          gap: 1,
+          zIndex: 1000,
+          transform: 'scale(0.6)',
+          transformOrigin: 'top right'
+        }}>
+          <ButtonGroup variant="contained" size="small">
             <Button 
               onClick={() => setIsNightMode(prev => !prev)}
               sx={buttonStyles.control}
@@ -450,7 +450,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
         }}>
           <IconButton
             size="large"
-            onClick={goToPrevPage}
+            onClick={handlePrevPage}
             disabled={pageNumber <= 1}
             sx={buttonStyles.navigation}
           >
@@ -470,7 +470,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
         }}>
           <IconButton
             size="large"
-            onClick={goToNextPage}
+            onClick={handleNextPage}
             disabled={pageNumber >= numPages}
             sx={buttonStyles.navigation}
           >
@@ -490,7 +490,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
           height: '100vh',
           overflowY: 'auto',
           overflowX: 'hidden',
-          pb: '120px', // Added padding to container
+          pb: '120px',
           '&::-webkit-scrollbar': {
             width: '8px',
           },
@@ -536,7 +536,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
               options={{
                 cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
                 cMapPacked: true,
-                standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/'
+                standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/standard_fonts/',
+                disableStream: true,
+                disableAutoFetch: true
               }}
             >
               <Box sx={{ 
@@ -544,11 +546,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
                 gap: 2, 
                 justifyContent: 'center',
                 alignItems: 'flex-start',
-                minHeight: 'calc(100vh - 120px)',
-                padding: '20px 0',
-                marginTop: '-10vh',
-                paddingBottom: '120px', // Increased padding to prevent overlap
-                marginBottom: '80px', // Added margin to ensure space at the bottom
+                padding: '20px',
                 '& .react-pdf__Page': {
                   backgroundColor: 'transparent',
                   canvas: {
@@ -563,13 +561,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
                   scale={scale}
                   rotate={rotation}
                   className={isNightMode ? 'night-mode-page' : ''}
-                  renderTextLayer={false}
+                  renderTextLayer={true}
                   renderAnnotationLayer={false}
-                  loading={
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                      <CircularProgress />
-                    </Box>
-                  }
                 />
                 {!isSinglePage && pageNumber < numPages && (
                   <Page
@@ -578,13 +571,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfPath, title }) => {
                     scale={scale}
                     rotate={rotation}
                     className={isNightMode ? 'night-mode-page' : ''}
-                    renderTextLayer={false}
+                    renderTextLayer={true}
                     renderAnnotationLayer={false}
-                    loading={
-                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <CircularProgress />
-                      </Box>
-                    }
                   />
                 )}
               </Box>
